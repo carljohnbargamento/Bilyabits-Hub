@@ -3,13 +3,6 @@ const fs = require('fs').promises;
 const path = require('path');
 const { createReadStream } = require('fs');
 
-let config;
-try {
-    config = JSON.parse(await fs.readFile('config.json', 'utf8'));
-} catch (e) {
-    config = { prefix: '!' }; // fallback
-}
-
 const api_key = "b640e04c-2b90-434b-91d7-fdd90650e0bf";
 
 module.exports = {
