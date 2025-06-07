@@ -1,1 +1,118 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bilyabits Hub – Landing Page</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #181629 0%, #3a235a 100%);
+      color: #fff;
+    }
+    .header-title {
+      font-size: 2.8rem;
+      font-weight: bold;
+      letter-spacing: 2px;
+      color: #c99cff;
+      margin-top: 40px;
+      margin-bottom: 35px;
+      text-align: center;
+      text-shadow: 0 2px 16px #1a0037, 0 1px 0 #441a6f;
+    }
+    .logo-box {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 35px;
+    }
+    .logo-img {
+      width: 320px;
+      height: 320px;
+      object-fit: cover;
+      border-radius: 20px;
+      box-shadow: 0 12px 32px 0 rgba(52, 21, 85, 0.35), 0 0 0 5px #3a235a99;
+      background: #232142;
+    }
+    .content-section {
+      background: rgba(30, 13, 40, 0.9);
+      border-radius: 20px;
+      padding: 35px 28px 28px 28px;
+      max-width: 700px;
+      margin: 0 auto 32px auto;
+      box-shadow: 0 8px 32px 0 rgba(52, 21, 85, 0.15);
+    }
+    .content-section h2 {
+      color: #b388ff;
+      margin-bottom: 16px;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    .update-log {
+      background: rgba(49, 21, 61, 0.7);
+      border-radius: 10px;
+      padding: 18px 18px 12px 18px;
+      margin-top: 24px;
+    }
+    .update-log h3 {
+      font-size: 1.12rem;
+      color: #eabfff;
+      margin-bottom: 10px;
+    }
+    .update-log ul {
+      margin-bottom: 0;
+    }
+    .footer {
+      margin-top: 28px;
+      font-size: .97rem;
+      color: #ac98c5;
+      text-align: center;
+      opacity: 0.7;
+    }
+    @media (max-width: 600px) {
+      .logo-img { width: 90vw; height: 90vw; max-width: 320px; max-height: 320px;}
+      .content-section { padding: 18px 8px 16px 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header-title">
+      Bilyabits Hub
+    </div>
+    <!-- Logo image -->
+    <div class="logo-box">
+      <img src="/img/bilyabit-hub.jpeg" alt="Bilyabits Hub Logo" class="logo-img" />
+    </div>
+    <!-- Content about and logs -->
+    <div class="content-section shadow-lg">
+      <h2>About</h2>
+      <p>
+        <b>Bilyabits Hub</b> is a Facebook chat bot framework powered by <code>ws3-fca</code>, designed for easy automation and management of chat commands on Messenger.
+        It is modular, extensible, and comes with a set of built-in and custom command handling features. The bot notifies admins on successful logins, supports automatic bio updates, and is simple to set up for your own usage.
+      </p>
+      <h2>What It Does</h2>
+      <ul>
+        <li>Automates Facebook Messenger chat interactions and responses.</li>
+        <li>Supports custom commands, event listening, and modular expansions (via JavaScript).</li>
+        <li>Automatically updates bot bio and notifies admins when online.</li>
+        <li>Features robust error handling and regular session refreshing.</li>
+        <li>Easy configuration and quick setup for personal or community bots.</li>
+      </ul>
+      <div class="update-log mt-4">
+        <h3>Update Log <span style="font-size: 0.95em; color:#b388ff;">(as of 01/13/2025)</span></h3>
+        <ul>
+          <li>Fixed issues with the Facebook API connection and improved error handling in <code>runApp.js</code>.</li>
+          <li>Added admin notifications when the bot is online, with detailed info.</li>
+          <li>Implemented auto-change bio feature. (Bio string is editable in <code>runApp.js</code>.)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer">
+      &copy; 2025 Bilyabits Hub &mdash; Crafted by <a href="https://facebook.com/carljohn.villavito" style="color:#dfbfff;">Carl John Villavito</a>
+    </div>
+  </div>
+</body>
+</html>
