@@ -34,8 +34,8 @@ Bilyabits-Hub is a facebook chat bot automated with various commands to help you
    cd Bilyabits-Hub
    ```
 
-2. **Config.json Settings:**
-   Setup your account, prefix, and port on `config.json`
+2. **Configuration Settings:**
+   Setup your account, prefix, and port on `config.json` also paste ur cookie header string in `appstate.txt`
 
 3. **Root Directory:**
    ```
@@ -44,7 +44,7 @@ Bilyabits-Hub is a facebook chat bot automated with various commands to help you
 
 4. **Install Dependencies:**
    ```
-   npm install fs express ws3-fca@latest axios fs-extra stream npmlog
+   npm install
    ```
 5. **Run the project/Build Commannd:**
    ```
