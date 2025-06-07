@@ -92,83 +92,84 @@
   </div>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.7/dist/sweetalert2.all.min.js"></script>
   <script>
-    // Fetch and update status
-    async function updateStatus() {
+  <script>
+  // Fetch and update status
+  async function updateStatus() {
+    try {
+      const res = await fetch('/api/status');
+      const data = await res.json();
       const statusText = document.getElementById('statusText');
-      try {
-        const res = await fetch('/api/status');
-        const data = await res.json();
-        if (data.status === 'ONLINE') {
-          statusText.innerHTML = '<i class="bi bi-circle-fill status-online"></i> <span class="status-online">ONLINE</span>';
-        } else {
-          statusText.innerHTML = '<i class="bi bi-slash-circle status-offline"></i> <span class="status-offline">OFFLINE</span>';
-        }
-      } catch (e) {
-        statusText.innerHTML = '<i class="bi bi-question-circle"></i> <span>Unknown</span>';
+      if (data.status === 'ONLINE') {
+        statusText.innerHTML = '<i class="bi bi-circle-fill status-online"></i> <span class="status-online">ONLINE</span>';
+      } else {
+        statusText.innerHTML = '<i class="bi bi-slash-circle status-offline"></i> <span class="status-offline">OFFLINE</span>';
       }
+    } catch (e) {
+      statusText.innerHTML = '<i class="bi bi-question-circle"></i> <span>Unknown</span>';
     }
+  }
 
-    // Load cookie to textarea
-    async function loadCookie() {
-      try {
-        const res = await fetch('/api/cookie');
-        const data = await res.json();
-        document.getElementById('cookieTextarea').value = data.cookie || '';
-      } catch {}
-    }
-
-    // Cookie actions using SweetAlert2
-    document.getElementById('deleteCookieBtn').onclick = async function() {
-      const result = await Swal.fire({
-        title: 'Delete Cookie?',
-        text: 'Are you sure you want to delete the cookie?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, delete it!',
-        cancelButtonText: 'Cancel',
-        reverseButtons: true
-      });
-      if (!result.isConfirmed) return;
-
-      const res = await fetch('/api/cookie', { method: 'DELETE' });
+  // Load cookie to textarea
+  async function loadCookie() {
+    try {
+      const res = await fetch('/api/cookie');
       const data = await res.json();
-      document.getElementById('cookieTextarea').value = '';
-      Swal.fire({
-        icon: data.success ? 'success' : 'error',
-        title: data.success ? 'Deleted' : 'Error',
-        text: data.message
-      });
-      updateStatus();
-    }
+      document.getElementById('cookieTextarea').value = data.cookie || '';
+    } catch {}
+  }
 
-    document.getElementById('changeCookieBtn').onclick = async function() {
-      const cookieStr = document.getElementById('cookieTextarea').value.trim();
-      if (!cookieStr) {
-        Swal.fire({
-          icon: 'warning',
-          title: 'Missing Cookie',
-          text: 'Please provide a cookie header string.'
-        });
-        return;
-      }
-      const res = await fetch('/api/cookie', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({cookie: cookieStr})
-      });
-      const data = await res.json();
-      Swal.fire({
-        icon: data.success ? 'success' : 'error',
-        title: data.success ? 'Success' : 'Error',
-        text: data.message
-      });
-      updateStatus();
-    }
+  // Cookie actions using SweetAlert2
+  document.getElementById('deleteCookieBtn').onclick = async function() {
+    const result = await Swal.fire({
+      title: 'Delete Cookie?',
+      text: 'Are you sure you want to delete the cookie?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel',
+      reverseButtons: true
+    });
+    if (!result.isConfirmed) return;
 
-    // Initial load
+    const res = await fetch('/api/cookie', { method: 'DELETE' });
+    const data = await res.json();
+    document.getElementById('cookieTextarea').value = '';
+    Swal.fire({
+      icon: data.success ? 'success' : 'error',
+      title: data.success ? 'Deleted' : 'Error',
+      text: data.message
+    });
     updateStatus();
-    loadCookie();
-    setInterval(updateStatus, 5000);
-  </script>
+  }
+
+  document.getElementById('changeCookieBtn').onclick = async function() {
+    const cookieStr = document.getElementById('cookieTextarea').value.trim();
+    if (!cookieStr) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Missing Cookie',
+        text: 'Please provide a cookie header string.'
+      });
+      return;
+    }
+    const res = await fetch('/api/cookie', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({cookie: cookieStr})
+    });
+    const data = await res.json();
+    Swal.fire({
+      icon: data.success ? 'success' : 'error',
+      title: data.success ? 'Success' : 'Error',
+      text: data.message
+    });
+    updateStatus();
+  }
+
+  // Initial load
+  updateStatus();
+  loadCookie();
+  setInterval(updateStatus, 5000);
+</script>
 </body>
 </html>
