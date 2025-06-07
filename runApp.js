@@ -132,12 +132,13 @@ function startBot() {
         botStatus = "ONLINE";
         console.log("[Bilyabits-Hub] Bot status: ONLINE");
 
-        try {
-            fs.writeFileSync("appstate.txt", cookie, "utf-8");
-            console.log("Saved session cookie to appstate.txt");
-        } catch (e) {
-            console.error("Failed to save appstate.txt:", e);
-        }
+        // ********* DO NOT write the cookie here! This causes the login loop! *********
+        // try {
+        //     fs.writeFileSync("appstate.txt", cookie, "utf-8");
+        //     console.log("Saved session cookie to appstate.txt");
+        // } catch (e) {
+        //     console.error("Failed to save appstate.txt:", e);
+        // }
 
         function updateBotBio(api) {
             const bio = `Prefix: ${config.prefix}\nOwner: ${config.botOwner}`;
