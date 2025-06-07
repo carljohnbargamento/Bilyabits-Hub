@@ -7,28 +7,24 @@ const app = express();
 const config = JSON.parse(fs.readFileSync("config.json", "utf8"));
 const port = config.port || 3000;
 
-// Track current bot state & listeners
 let botStatus = "OFFLINE";
 let apiInstance = null;
 let listenStopFunc = null;
 let refreshIntervalId = null;
 let lastNotifiedBotId = null;
 
-// Serve static files for portal and img folders
+// Serve static files
 app.use("/portal", express.static(path.join(__dirname, "portal")));
 app.use("/img", express.static(path.join(__dirname, "img")));
 
-// Serve the landing page at "/"
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "portal", "index.html"));
 });
 
-// Status API
 app.get("/api/status", (req, res) => {
     res.json({ status: botStatus });
 });
 
-// Cookie APIs
 app.get("/api/cookie", (req, res) => {
     try {
         const cookie = fs.readFileSync("appstate.txt", "utf8").trim();
@@ -63,7 +59,7 @@ app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
 
-// Load commands from ./cmds
+// Load commands
 const commandFiles = fs.readdirSync('./cmds').filter(file => file.endsWith('.js'));
 console.log("\n\n\n");
 console.log("=====COMMANDS LOADED=====");
@@ -79,7 +75,6 @@ commandFiles.forEach(file => {
     commands[command.name] = command;
 });
 
-// Cookie loader
 function readCookie() {
     try {
         const cookie = fs.readFileSync("appstate.txt", "utf8").trim();
@@ -91,21 +86,19 @@ function readCookie() {
     }
 }
 
-// Properly clear previous listeners and intervals
+// Clear previous listeners and intervals
 function clearBot() {
     if (refreshIntervalId) {
         clearInterval(refreshIntervalId);
         refreshIntervalId = null;
     }
     if (listenStopFunc) {
-        // ws3-fca provides a stopListening function
         try { listenStopFunc(); } catch {}
         listenStopFunc = null;
     }
     apiInstance = null;
 }
 
-// Main bot startup
 function startBot() {
     clearBot();
     const cookie = readCookie();
@@ -139,7 +132,6 @@ function startBot() {
         botStatus = "ONLINE";
         console.log("[Bilyabits-Hub] Bot status: ONLINE");
 
-        // Save the session (cookie) back to appstate.txt after login
         try {
             fs.writeFileSync("appstate.txt", cookie, "utf-8");
             console.log("Saved session cookie to appstate.txt");
@@ -147,7 +139,6 @@ function startBot() {
             console.error("Failed to save appstate.txt:", e);
         }
 
-        // Function to change bot's bio
         function updateBotBio(api) {
             const bio = `Prefix: ${config.prefix}\nOwner: ${config.botOwner}`;
             api.changeBio(bio, (err) => {
@@ -160,7 +151,6 @@ function startBot() {
         }
         updateBotBio(api);
 
-        // Notify admin only if this is a new session
         const adminUserThread = config.adminID;
         const botID = api.getCurrentUserID();
         if (lastNotifiedBotId !== botID) {
@@ -171,7 +161,6 @@ function startBot() {
             lastNotifiedBotId = botID;
         }
 
-        // Refresh fb_dtsg every hour
         refreshIntervalId = setInterval(() => {
             if (api.refreshFb_dtsg) {
                 api.refreshFb_dtsg();
@@ -179,7 +168,6 @@ function startBot() {
             }
         }, 60 * 60 * 1000);
 
-        // =============== BUILT-IN AND COMMAND HANDLING ===============
         function handleBuiltInCommands(api, event) {
             const msg = event.body ? event.body.trim() : "";
 
@@ -245,7 +233,6 @@ function startBot() {
                 return;
             }
 
-            // Warn if user omits prefix
             const splitMessage = message.split(/ +/);
             const msgCommandName = splitMessage[0].toLowerCase();
 
@@ -259,7 +246,6 @@ function startBot() {
                 return;
             }
 
-            // Unrecognized input
             api.sendMessage(
                 `🤖 Unrecognized input.\nAlways use the prefix "${config.prefix}" before commands.\nType "${config.prefix}help" to see available commands.`,
                 event.threadID,
@@ -268,11 +254,10 @@ function startBot() {
             );
         }
 
-        // =============== LISTEN FOR EVENTS (only one active listener) ===============
         listenStopFunc = api.listenMqtt((err, event) => {
             if (err) return console.error("Error while listening:", err);
 
-            // Console log for debugging
+            // Log event for debugging
             console.log("Event received:", {
                 type: event.type,
                 threadID: event.threadID,
