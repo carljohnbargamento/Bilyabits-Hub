@@ -38,7 +38,7 @@ module.exports = {
 
             // Download all images from the results and group as attachments
             const images = response.data.data;
-            const maxImages = response.count; // Limit to avoid spamming too many images at once
+            const maxImages = 40; // Limit to avoid spamming too many images at once
             const imagesToSend = images.slice(0, maxImages);
 
             const downloadPromises = imagesToSend.map((imgUrl, idx) => {
