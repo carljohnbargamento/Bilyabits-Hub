@@ -1,10 +1,25 @@
 const fs = require("fs");
 const wiegine = require("ws3-fca");
 const express = require("express");
+const path = require("path");
 const app = express();
 
 const config = JSON.parse(fs.readFileSync("config.json", "utf8"));
 const port = config.port || 3000;
+
+// Serve static files for portal and img folders
+app.use("/portal", express.static(path.join(__dirname, "portal")));
+app.use("/img", express.static(path.join(__dirname, "img")));
+
+// Serve the landing page at "/"
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "portal", "index.html"));
+});
+
+// Start the Express server
+app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
+});
 
 // Load commands from the cmds folder
 const commandFiles = fs.readdirSync('./cmds').filter(file => file.endsWith('.js'));
@@ -202,14 +217,4 @@ wiegine.login(cookie, {
 
 process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-});
-
-// Define a simple route
-app.get("/", (req, res) => {
-    res.send("Bot is running");
-});
-
-// Start the Express server
-app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
 });
