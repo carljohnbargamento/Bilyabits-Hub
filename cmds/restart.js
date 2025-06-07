@@ -1,4 +1,4 @@
-module.exports.restart = {
+module.exports = {
     name: 'restart',
     description: 'Reboot the bot',
     execute(api, event, args) {
