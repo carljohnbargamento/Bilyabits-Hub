@@ -7,7 +7,26 @@ const app = express();
 const config = JSON.parse(fs.readFileSync("config.json", "utf8"));
 const port = config.port || 3000;
 
-let botStatus = "OFFLINE"; // Track status
+// Persistent status file to track last successful login
+const STATUS_FILE = "bot_status.json";
+
+// Helper to load/save persistent status for bot
+function saveStatus(status) {
+    fs.writeFileSync(STATUS_FILE, JSON.stringify(status, null, 2), "utf-8");
+}
+function loadStatus() {
+    try {
+        return JSON.parse(fs.readFileSync(STATUS_FILE, "utf8"));
+    } catch {
+        return { online: false, lastSession: null };
+    }
+}
+
+// Global state
+let botStatus = "OFFLINE";
+let botApi = null;
+let refreshIntervalId = null;
+let listening = false;
 
 // Serve static files for portal and img folders
 app.use("/portal", express.static(path.join(__dirname, "portal")));
@@ -20,7 +39,8 @@ app.get("/", (req, res) => {
 
 // Built-in API for status
 app.get("/api/status", (req, res) => {
-    res.json({ status: botStatus });
+    const status = loadStatus();
+    res.json({ status: status.online ? "ONLINE" : "OFFLINE" });
 });
 
 // API to get current cookie
@@ -82,22 +102,34 @@ commandFiles.forEach(file => {
 });
 
 // Read the cookie string from appstate.txt
-let cookie;
 function readCookie() {
     try {
-        cookie = fs.readFileSync("appstate.txt", "utf8").trim();
+        const cookie = fs.readFileSync("appstate.txt", "utf8").trim();
         if (!cookie) throw new Error("appstate.txt is empty or invalid.");
-        return true;
+        return cookie;
     } catch (error) {
         console.error("Failed to load a valid appstate.txt:", error);
-        return false;
+        return null;
     }
 }
 
-// Try auto-login if cookie exists
+// Helper: Clear intervals/listeners if restarting bot
+function clearBot() {
+    if (refreshIntervalId) {
+        clearInterval(refreshIntervalId);
+        refreshIntervalId = null;
+    }
+    listening = false;
+    botApi = null;
+}
+
+// Main bot logic
 function startBot() {
-    if (!readCookie()) {
+    clearBot();
+    const cookie = readCookie();
+    if (!cookie) {
         botStatus = "OFFLINE";
+        saveStatus({ online: false, lastSession: null });
         return;
     }
 
@@ -116,9 +148,12 @@ function startBot() {
         if (err) {
             console.error("Login failed:", err);
             botStatus = "OFFLINE";
+            saveStatus({ online: false, lastSession: null });
             return;
         }
         botStatus = "ONLINE";
+        botApi = api;
+        const botID = api.getCurrentUserID();
 
         // Save the session (cookie) back to appstate.txt after login
         try {
@@ -128,7 +163,7 @@ function startBot() {
             console.error("Failed to save appstate.txt:", e);
         }
 
-        // Function to change bot's bio
+        // Change bot's bio
         function updateBotBio(api) {
             const bio = `Prefix: ${config.prefix}\nOwner: ${config.botOwner}`;
             api.changeBio(bio, (err) => {
@@ -139,32 +174,33 @@ function startBot() {
                 }
             });
         }
-
         updateBotBio(api);
-        console.log("[ Bilyabits-Hub ] Refreshing fb_dtsg every 1 hour");
 
-        // Notify the user that the bot is online with basic information
-        const adminUserThread = config.adminID;
-        const botID = api.getCurrentUserID();
-        api.sendMessage(
-            `I am online!\nBot Owner Name: ${config.botOwnerName}\nBot ID: ${botID}`,
-            adminUserThread
-        );
+        // Notify the admin only if it's a new session
+        let statusInfo = loadStatus();
+        if (!statusInfo.online || statusInfo.lastSession !== botID) {
+            const adminUserThread = config.adminID;
+            api.sendMessage(
+                `I am online!\nBot Owner Name: ${config.botOwnerName}\nBot ID: ${botID}`,
+                adminUserThread
+            );
+            saveStatus({ online: true, lastSession: botID });
+        } else {
+            // Still online, no need to notify again
+            saveStatus({ online: true, lastSession: botID });
+        }
 
         // Refresh fb_dtsg every hour
-        const refreshInterval = 60 * 60 * 1000;
-        setInterval(() => {
+        refreshIntervalId = setInterval(() => {
             if (api.refreshFb_dtsg) {
                 api.refreshFb_dtsg();
                 console.log("Refreshed fb_dtsg at:", new Date().toLocaleString());
             }
-        }, refreshInterval);
+        }, 60 * 60 * 1000);
 
         // =============== BUILT-IN AND COMMAND HANDLING ===============
         function handleBuiltInCommands(api, event) {
             const msg = event.body ? event.body.trim() : "";
-
-            // Reply to "Prefix" or "prefix" (case-insensitive)
             if (msg.toLowerCase() === "prefix") {
                 api.sendMessage(
                     `The current prefix is: "${config.prefix}"`,
@@ -176,23 +212,16 @@ function startBot() {
             }
             return false;
         }
-
         function handleCommand(event) {
             const prefix = config.prefix;
             const message = event.body ? event.body.trim() : "";
-
-            // If message is empty, ignore
             if (!message) return;
-
-            // Built-in commands: "Prefix"
             if (handleBuiltInCommands(api, event)) return;
 
-            // If message starts with prefix, process command
             if (message.startsWith(prefix)) {
                 const args = message.slice(prefix.length).trim().split(/ +/);
                 const commandNameRaw = args.shift();
                 const commandName = commandNameRaw ? commandNameRaw.toLowerCase() : "";
-
                 if (!commandName) {
                     api.sendMessage(
                         `No command input, please type "${config.prefix}help" for available commands.`,
@@ -202,7 +231,6 @@ function startBot() {
                     );
                     return;
                 }
-
                 if (!commands[commandName]) {
                     let usageMsg = "⚠️ Invalid command.\n";
                     usageMsg += `Usage: ${prefix}<command>\n`;
@@ -216,8 +244,6 @@ function startBot() {
                     );
                     return;
                 }
-
-                // Execute the command
                 try {
                     commands[commandName].execute(api, event, args);
                 } catch (error) {
@@ -231,11 +257,9 @@ function startBot() {
                 }
                 return;
             }
-
-            // If message does NOT start with prefix but matches a command name, warn the user to use the prefix
+            // Warn if user omits prefix
             const splitMessage = message.split(/ +/);
             const msgCommandName = splitMessage[0].toLowerCase();
-
             if (commands[msgCommandName]) {
                 api.sendMessage(
                     `⚠️ Please use the prefix "${config.prefix}" before the command.\nExample: ${config.prefix}${msgCommandName}`,
@@ -245,8 +269,7 @@ function startBot() {
                 );
                 return;
             }
-
-            // For any other (gibberish) input, show a warning about invalid input and remind to use prefix
+            // Unrecognized input
             api.sendMessage(
                 `🤖 Unrecognized input.\nAlways use the prefix "${config.prefix}" before commands.\nType "${config.prefix}help" to see available commands.`,
                 event.threadID,
@@ -256,26 +279,25 @@ function startBot() {
         }
 
         // =============== LISTEN FOR EVENTS ===============
-        api.listenMqtt((err, event) => {
-            if (err) return console.error("Error while listening:", err);
-
-            console.log("Event received:", event);
-
-            switch (event.type) {
-                case "message":
-                    handleCommand(event);
-                    break;
-                case "event":
-                    console.log("Other event type:", event);
-                    break;
-            }
-        });
+        if (!listening) {
+            api.listenMqtt((err, event) => {
+                if (err) return console.error("Error while listening:", err);
+                switch (event.type) {
+                    case "message":
+                        handleCommand(event);
+                        break;
+                    case "event":
+                        console.log("Other event type:", event);
+                        break;
+                }
+            });
+            listening = true;
+        }
     });
 }
 
 // Watch cookie file for changes, restart bot on update
 fs.watchFile("appstate.txt", { interval: 1500 }, (curr, prev) => {
-    // If cookie file is updated, try to reload and login
     if (curr.mtime !== prev.mtime) {
         console.log("appstate.txt changed, restarting bot...");
         botStatus = "OFFLINE";
