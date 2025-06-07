@@ -4,8 +4,8 @@ const path = require('path');
 const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 
 module.exports = {
-    name: 'art',
-    description: 'Generate an image based on a prompt using Stable Diffusion 3.5',
+    name: 'dal-e',
+    description: 'Generate an image based on a prompt using DALL·E 3',
     async execute(api, event, args) {
         const prompt = args.join(' ');
 
@@ -20,14 +20,14 @@ module.exports = {
 
         api.sendMessage("🎨 Generating your art, please wait...", event.threadID, event.messageID);
 
-        // Prepare the API URL
-        const url = `https://kaiz-apis.gleeze.com/api/stable-diffusion-3.5-rev2?prompt=${encodeURIComponent(prompt)}&apikey=b640e04c-2b90-434b-91d7-fdd90650e0bf`;
+        // Prepare the new API URL
+        const url = `https://api.zetsu.xyz/api/dalle-3?prompt=${encodeURIComponent(prompt)}&apikey=dd4d0574e81326816584a5e7bd43ca8e`;
         
         // Prepare image output path
         const imgDir = path.join(__dirname, '..', 'img');
         if (!fs.existsSync(imgDir)) fs.mkdirSync(imgDir, { recursive: true });
 
-        const fileName = `art_${Date.now()}_${Math.floor(Math.random() * 10000)}.jpg`;
+        const fileName = `dal-e_${Date.now()}_${Math.floor(Math.random() * 10000)}.jpg`;
         const filePath = path.join(imgDir, fileName);
 
         try {
