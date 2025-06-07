@@ -11,7 +11,7 @@ module.exports = {
             const response = await axios.get(url);
             if (response.data && response.data.email && response.data.token) {
                 api.sendMessage(
-                    `Temp Mail Generated:\n\nEmail: ${response.data.email}\nToken: ${response.data.token}\nInbox URL: ${response.data.inbox_url}`,
+                    `Temp Mail Generated:\nEmail: ${response.data.email}\n\nToken: ${response.data.token}\n`,
                     event.threadID, event.messageID
                 );
             } else {
