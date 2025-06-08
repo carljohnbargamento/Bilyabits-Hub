@@ -6,8 +6,7 @@ const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 module.exports = {
     name: "remini",
     description: "Enhance a photo using the Remini API. Usage: {prefix}remini (reply to an image)",
-    cooldown: 5,
-    execute: async function(api, event, args) {
+    async function(api, event, args) {
         api.sendTypingIndicator(event.threadID);
 
         // Only work on reply with a photo
