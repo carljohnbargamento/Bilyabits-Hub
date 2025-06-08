@@ -21,7 +21,7 @@ module.exports = {
                 const stock = data[key];
                 const title = stock.name || key.replace(/_/g, " ").toUpperCase();
                 const timer = stock.countdown?.formatted || "";
-                msg += `👁️‍🗨️${title} 🕜${timer}:\n`;
+                msg += `👁️‍🗨️${title} \n🕜${timer}:\n`;
 
                 if (Array.isArray(stock.items) && stock.items.length > 0) {
                     for (const item of stock.items) {
