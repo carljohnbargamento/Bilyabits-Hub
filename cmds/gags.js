@@ -12,8 +12,8 @@ module.exports = {
             const data = res.data;
 
             let msg = "____________________________\n";
-            msg += "Grow a Garden - Stock Identifier\n";
-            msg += "By: Carl John Villavito\n";
+            msg += "𝗚𝗿𝗼𝘄 𝗔 𝗚𝗮𝗿𝗱𝗲𝗻 - 𝗦𝘁𝗼𝗰𝗸 𝗜𝗱𝗲𝗻𝘁𝗶𝗳𝗶𝗲𝗿\n";
+            msg += "By: 𝙲𝚊𝚛𝚕 𝙹𝚘𝚑𝚗 𝚅𝚒𝚕𝚕𝚊𝚟𝚒𝚝𝚘\n";
             msg += "____________________________\n\n";
 
             // For each stock type in the response
