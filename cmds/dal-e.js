@@ -11,7 +11,7 @@ module.exports = {
 
         if (!prompt) {
             api.sendMessage(
-                `Please enter a prompt for the artwork.\nUsage: ${config.prefix}art <your prompt>`,
+                `Please enter a prompt for the artwork.\nUsage: ${config.prefix}dal-e <your prompt>`,
                 event.threadID,
                 event.messageID
             );
