@@ -29,7 +29,7 @@ module.exports = {
                 const emoji = emojiMap[key] || "📦";
                 const title = stock.name || key.replace(/_/g, " ").toUpperCase();
                 const timer = stock.countdown?.formatted || "";
-                msg += `[${title}] ${timer}:\n`;
+                msg += `👁️‍🗨️${title} 🕜${timer}:\n`;
 
                 if (Array.isArray(stock.items) && stock.items.length > 0) {
                     for (const item of stock.items) {
