@@ -1,59 +1,38 @@
 const axios = require("axios");
-const fs = require("fs");
-const path = require("path");
-const config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 
 module.exports = {
     name: "remini",
     description: "Enhance a photo using the Remini API. Usage: {prefix}remini (reply to an image)",
-    async function(api, event, args) {
-        api.sendTypingIndicator(event.threadID);
-
-        // Only work on reply with a photo
-        if (
-            !(event.type === "message_reply" && event.messageReply.attachments[0]?.type === "photo")
-        ) {
-            api.sendMessage(`❌ | Please reply to an image with: ${config.prefix}remini`, event.threadID, event.messageID);
+    cooldown: 5,
+    execute: async function(api, event, args) {
+        // Only process if this is a reply to a message with a photo attachment
+        if (!(event.type === "message_reply" && event.messageReply.attachments[0]?.type === "photo")) {
+            api.sendMessage("❌ | Please reply to an image with your command.", event.threadID, event.messageID);
             return;
         }
 
-        const imageUrl = encodeURIComponent(event.messageReply.attachments[0].url);
-        const apiUrl = `https://kaiz-apis.gleeze.com/api/remini?url=${imageUrl}&stream=true&apikey=b640e04c-2b90-434b-91d7-fdd90650e0bf`;
-
+        api.sendTypingIndicator(event.threadID);
         api.sendMessage("✨ Enhancing your image, please wait...", event.threadID, event.messageID);
 
-        // Prepare image output path
-        const imgDir = path.join(__dirname, '..', 'img');
-        if (!fs.existsSync(imgDir)) fs.mkdirSync(imgDir, { recursive: true });
-
-        const fileName = `remini_${Date.now()}_${Math.floor(Math.random() * 10000)}.jpg`;
-        const filePath = path.join(imgDir, fileName);
-
         try {
-            // Download the enhanced image (responseType: stream)
-            const response = await axios.get(apiUrl, { responseType: 'stream' });
+            const imgUrl = encodeURIComponent(event.messageReply.attachments[0].url);
+            const apiUrl = `https://kaiz-apis.gleeze.com/api/remini?url=${imgUrl}&stream=true&apikey=b640e04c-2b90-434b-91d7-fdd90650e0bf`;
 
-            // Save the image
-            const writer = fs.createWriteStream(filePath);
-            response.data.pipe(writer);
+            // Get the image directly from the API as a stream and send it as an attachment
+            const response = await axios.get(apiUrl, { responseType: "arraybuffer" });
 
-            writer.on('finish', () => {
+            if (response.status === 200 && response.data) {
                 api.sendMessage(
                     {
-                        body: `✨ Here is your enhanced image!`,
-                        attachment: fs.createReadStream(filePath)
+                        body: "✨ Here is your enhanced image!",
+                        attachment: Buffer.from(response.data, "binary")
                     },
                     event.threadID,
-                    () => {
-                        fs.unlink(filePath, () => {});
-                    },
                     event.messageID
                 );
-            });
-
-            writer.on('error', () => {
-                api.sendMessage("❌ Failed to enhance or send the image. Please try again later.", event.threadID, event.messageID);
-            });
+            } else {
+                api.sendMessage("❌ | Failed to enhance image. Try again later.", event.threadID, event.messageID);
+            }
         } catch (error) {
             console.error(error);
             api.sendMessage("❌ | An error occurred while processing your image. Please try again later.", event.threadID, event.messageID);
